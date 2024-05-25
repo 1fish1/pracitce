@@ -1,0 +1,40 @@
+//    getClass()：取得当前对象所属的Class对象
+//    getClassLoader():是获得这个类对象的加载器
+public Map account(){
+	 Map<String,Object> map = new HashMap<String,Object>();
+	//通过该类的类装载器获取文件的路径
+	String url = this.getClass().getClassLoader().getResource("redis.properties").getPath();
+	InputStream redis = null;
+	BufferedReader br = null;
+	try {
+		File f = new File(url);
+		//以防有中文名路径，中文路径里面的空格会被"%20"代替
+		url = java.net.URLDecoder.decode(url, "utf-8");
+		
+		redis = new FileInputStream(f);
+		br = new BufferedReader(new InputStreamReader(redis));
+		
+		//文件内容格式:spring.redis.pool.max-active=8
+		String s;
+		while((s = br.readLine()).length() !=0) {
+			if(!s.startsWith("#")) {//过滤掉注释行数据
+				String [] ss = s.split("=");
+				if(ss.length > 1) {
+					logger.info("属性名："+ss[0] + "   属性值：" + ss[1]);
+					map.put(ss[0], ss[1]);
+				}
+			}
+		}
+		
+	} catch (Exception e) {
+		e.printStackTrace();
+	}finally {
+		try {
+			if(redis != null) {redis.close();}
+			if(br != null) { br.close();}
+		} catch (Exception e2) {
+			e2.printStackTrace();
+		}
+	}
+	return map;
+}
